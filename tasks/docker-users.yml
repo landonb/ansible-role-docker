@@ -5,6 +5,7 @@
     groups: docker
     append: true
   with_items: "{{ docker_users }}"
+  become: true
 
 - name: Reset ssh connection to apply user changes.
   meta: reset_connection

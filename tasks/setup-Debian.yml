@@ -3,6 +3,7 @@
   ansible.builtin.file:
     path: /etc/apt/trusted.gpg.d/docker.asc
     state: absent
+  become: true
 
 - name: Ensure the repo referencing the previous trusted.gpg.d key is not present
   apt_repository:
@@ -11,12 +12,14 @@
     filename: "{{ docker_apt_filename }}"
     update_cache: true
   when: docker_add_repo | bool
+  become: true
 
 - # See https://docs.docker.com/engine/install/debian/#uninstall-old-versions
   name: Ensure old versions of Docker are not installed.
   package:
     name: "{{ docker_obsolete_packages }}"
     state: absent
+  become: true
 
 - name: Ensure dependencies are installed.
   apt:
@@ -25,12 +28,14 @@
       - ca-certificates
     state: present
   when: docker_add_repo | bool
+  become: true
 
 - name: Ensure directory exists for /etc/apt/keyrings
   file:
     path: /etc/apt/keyrings
     state: directory
     mode: '0755'
+  become: true
 
 - name: Add Docker apt key.
   ansible.builtin.get_url:
@@ -42,6 +47,7 @@
   register: add_repository_key
   ignore_errors: "{{ docker_apt_ignore_key_error }}"
   when: docker_add_repo | bool
+  become: true
 
 - name: Ensure curl is present (on older systems without SNI).
   package: name=curl state=present
@@ -51,6 +57,7 @@
   shell: >
     curl -sSL {{ docker_apt_gpg_key }} | apt-key add -
   when: add_repository_key is failed and docker_add_repo | bool
+  become: true
 
 - name: Add Docker repository.
   apt_repository:
@@ -59,3 +66,4 @@
     filename: "{{ docker_apt_filename }}"
     update_cache: true
   when: docker_add_repo | bool
+  become: true
