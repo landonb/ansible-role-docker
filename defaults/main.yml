@@ -40,13 +40,118 @@ docker_add_repo: true
 # Docker repo URL.
 docker_repo_url: https://download.docker.com/linux
 
+# Map Linux Mint distribution_release to Ubuntu
+# THANX: I searched "ansible_distribution_release" and found this project
+#        which uses a similar lookup:
+#   https://www.jrk-support.de/drk-baden/ansible-lv/src/commit/5198c59ed2549168bf2f65fc65978d8f1cdea30b/modules/artis3n.tailscale/vars/main.yml
+# CALSO: Unresolved (closed by Stale bot) issue from 2019,
+#        *Add support to Linux Mint*, suggests a work-around:
+#          --extra-vars 'docker_apt_repository="deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"'
+#   https://github.com/geerlingguy/ansible-role-docker/issues/139
+linux_mint_codename_lookup:
+  # Ubuntu non-LTS codenames
+  # ========================
+  # REFER: https://en.wikipedia.org/wiki/Ubuntu_version_history
+  # - Ubuntu 18.10 (Cosmic Cuttlefish)
+  cosmic: cosmic
+  # - Ubuntu 19.04 (Disco Dingo)
+  disco: disco
+  # - Ubuntu 19.10 (Eoan Ermine)
+  eoan: eoan
+  # - Ubuntu 20.10 (Groovy Gorilla)
+  groovy: groovy
+  # - Ubuntu 21.04 (Hirsute Hippo)
+  hirsute: hirsute
+  # - Ubuntu 21.10 (Impish Indri)
+  impish: impish
+  # - Ubuntu 22.10 (Kinetic Kudu)
+  kinetic: kinetic
+  # - Ubuntu 23.04 (Lunar Lobster)
+  lunar: lunar
+  # - Ubuntu 23.10 (Mantic Minotaur)
+  mantic: mantic
+  # - Ubuntu 24.10 (Oracular Oriole)
+  oracular: oracular
+  # - Ubuntu 25.04 (Plucky Puffin)
+  plucky: plucky
+  #
+  # Other Ubuntu codenames
+  # ======================
+  # - Ubuntu Chinese version
+  #   - REFER: https://en.wikipedia.org/wiki/Ubuntu_Kylin
+  kylin: kylin
+  #
+  # Ubuntu LTS codenames
+  # ====================
+  # REFER: https://en.wikipedia.org/wiki/Ubuntu_version_history
+  # - Ubuntu 16.04 LTS (Xenial Xerus)
+  xenial: xenial
+  # - Ubuntu 18.04 LTS (Bionic Beaver)
+  bionic: bionic
+  # - Ubuntu 20.04 LTS (Focal Fossa)
+  focal: focal
+  # - Ubuntu 22.04 LTS (Jammy Jellyfish)
+  jammy: jammy
+  # - Ubuntu 24.04 LTS (Noble Numbat)
+  noble: noble
+  #
+  # Linux Mint codenames
+  # ====================
+  # REFER: https://en.wikipedia.org/wiki/Linux_Mint#Releases
+  # - LM 18-18.3
+  sarah: xenial
+  serena: xenial
+  sonya: xenial
+  sylvia: xenial
+  # - LM 19-19.3
+  tera: bionic
+  tessa: bionic
+  tina: bionic
+  tricia: bionic
+  # - LM 20-20.3
+  ulyana: focal
+  ulyssa: focal
+  uma: focal
+  una: focal
+  # - LM 21-21.3
+  vanessa: jammy
+  vera: jammy
+  victoria: jammy
+  virginia: jammy
+  # - LM 22-22.3
+  wilma: noble
+  #
+  # Debian codenames
+  # ================
+  # REFER: https://www.debian.org/releases/
+  # - Unstable/rolling/development release
+  sid: sid
+  # - Debian 9
+  stretch: stretch
+  # - Debian 10
+  buster: buster
+  # - Debian 11
+  bullseye: bullseye
+  # - Debian 12
+  bookworm: bookworm
+  # - Debian 13
+  trixie: trixie
+  #
+  # Linux Mint Debian Edition codenames
+  # ===================================
+  # REFER: https://en.wikipedia.org/wiki/Linux_Mint#Releases
+  cindy: stretch
+  debbie: buster
+  elsie: bullseye
+  faye: bookworm
+
 # Used only for Debian/Ubuntu/Pop!_OS/Linux Mint. Switch 'stable' to 'nightly' if needed.
 docker_apt_release_channel: stable
 # docker_apt_ansible_distribution is a workaround for Ubuntu variants which can't be identified as such by Ansible,
 # and is only necessary until Docker officially supports them.
 docker_apt_ansible_distribution: "{{ 'ubuntu' if ansible_distribution in ['Pop!_OS', 'Linux Mint'] else ansible_distribution }}"
 docker_apt_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'armhf' if ansible_architecture == 'armv7l' else 'amd64' }}"
-docker_apt_repository: "deb [arch={{ docker_apt_arch }} signed-by=/etc/apt/keyrings/docker.asc] {{ docker_repo_url }}/{{ docker_apt_ansible_distribution | lower }} {{ ansible_distribution_release }} {{ docker_apt_release_channel }}"
+docker_apt_repository: "deb [arch={{ docker_apt_arch }} signed-by=/etc/apt/keyrings/docker.asc] {{ docker_repo_url }}/{{ docker_apt_ansible_distribution | lower }} {{ linux_mint_codename_lookup[ansible_distribution_release | lower] | default(ansible_distribution_release) }} {{ docker_apt_release_channel }}"
 docker_apt_ignore_key_error: true
 docker_apt_gpg_key: "{{ docker_repo_url }}/{{ docker_apt_ansible_distribution | lower }}/gpg"
 docker_apt_gpg_key_checksum: "sha256:1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570"
