@@ -1,3 +1,45 @@
+# *Forked* `ansible-role-docker` adds Linux Mint and `ansible-playbook ... -K` support
+
+This [`ansible-role-docker`](https://github.com/geerlingguy/ansible-role-docker)
+fork makes the following changes:
+
+- Adds Linux Mint support.
+
+  - Specifically, translates the Linux Mint release codename to the
+    Ubuntu release codename, e.g., "virginia" → "jammy".
+
+  - If not, the `apt` command fails, e.g.,
+
+      ```
+      fatal: [lethe]: FAILED! => {"changed": false, "msg": "Failed to update apt cache: E:The repository 'https://download.docker.com/linux/ubuntu virginia Release' does not have a Release file."}
+      ```
+
+  - Alternatively, per this unresolved (and automatically closed) issue
+    from 2019,
+    [*Add support to Linux Mint*](https://github.com/geerlingguy/ansible-role-docker/issues/139),
+    instead of using this forked repo, you could override the repo
+    variable instead, e.g.,
+
+      ```
+      --extra-vars 'docker_apt_repository="deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable"'
+      ```
+
+- Adds `-K`/`--ask-become-pass` support.
+
+  - Specifically, so you can call something like this:
+
+      ```
+      ansible-playbook </path/to/site.yml> -l <hostname> --tags ansible-role-docker -K
+      ```
+
+    Which is how the author normally instigates roles.
+
+  - Alternatively, and how you'd run the upstream repo, use the `--become -K`
+    options to run the operations as root, and to have Ansible prompt for the
+    privilege escalation password.
+
+*The upstream README follows:*
+
 # Ansible Role: Docker
 
 [![CI](https://github.com/geerlingguy/ansible-role-docker/workflows/CI/badge.svg?event=push)](https://github.com/geerlingguy/ansible-role-docker/actions?query=workflow%3ACI)
