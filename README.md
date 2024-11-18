@@ -31,6 +31,10 @@ fork makes the following changes:
     or [kind](https://kind.sigs.k8s.io/), but the (fork) author is
     curious to get to know Kubernetes on a deeper lever.
 
+- Configures `iptables`, `ip6tables`, and `ufw` to allow incoming TCP
+  connections on the
+  [Kubernetes ports](https://kubernetes.io/docs/reference/networking/ports-and-protocols/).
+
 - Adds `-K`/`--ask-become-pass` support.
 
   - Specifically, so you can call something like this:

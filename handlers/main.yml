@@ -19,3 +19,9 @@
   when: containerd_service_manage | bool
   become: true
 
+# E.g., sudo service netfilter-persistent save
+- name: persist iptables
+  # Note: This creates /etc/iptables/rules.v4|v6
+  ansible.builtin.command: service netfilter-persistent save
+  become: true
+

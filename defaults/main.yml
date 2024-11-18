@@ -48,6 +48,28 @@ extras_reconfigure_containerd: true
 #   - Whether to restart containerd.
 containerd_service_manage: true
 containerd_restart_handler_state: restarted
+# - Add iptables/ip6tables and ufw firewall rules.
+#   - To skip this task, set to empty array:
+#     extras_firewall_allow_ports_tcp: []
+extras_firewall_allow_ports_tcp:
+  # Kubernetes ports
+  # - REFER: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+  #   https://kubernetes.io/docs/reference/networking/ports-and-protocols/
+  # Control plane / Kubernetes API server
+  - 6443
+  # Control plane / etcd server client API
+  - 2379
+  - 2380
+  # Control plane & Worker node(s) / Kubelet API
+  - 10250
+  # Control plane / kube-scheduler
+  - 10259
+  # Control plane / kube-controller-manager
+  - 10257
+  # Worker node(s) / kube-proxy
+  - 10256
+  # # Worker node(s) / NodePort Services
+  # - 30000-32767  # Varies based on what's installed
 
 # Map Linux Mint distribution_release to Ubuntu
 # THANX: I searched "ansible_distribution_release" and found this project
