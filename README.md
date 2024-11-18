@@ -24,6 +24,13 @@ fork makes the following changes:
       --extra-vars 'docker_apt_repository="deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable"'
       ```
 
+- Installs [CNI network plugins](https://github.com/containernetworking/plugins).
+
+  - Note this is more Kubernetes than Docker, and you could more easily
+    run Kubernetes using [minikube](https://minikube.sigs.k8s.io/docs/)
+    or [kind](https://kind.sigs.k8s.io/), but the (fork) author is
+    curious to get to know Kubernetes on a deeper lever.
+
 - Adds `-K`/`--ask-become-pass` support.
 
   - Specifically, so you can call something like this:
@@ -37,6 +44,11 @@ fork makes the following changes:
   - Alternatively, and how you'd run the upstream repo, use the `--become -K`
     options to run the operations as root, and to have Ansible prompt for the
     privilege escalation password.
+
+    - Note that the GitHub CLI tool is expected to be found at
+      `~/.local/bin/gh` within user's account, but `--become -K`
+      changes user home to `/root`. So run without `--become`,
+      or disable the CNI plugins tasks.
 
 *The upstream README follows:*
 

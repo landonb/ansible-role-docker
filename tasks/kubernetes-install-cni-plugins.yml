@@ -1,0 +1,59 @@
+---
+
+# REFER:
+# https://github.com/containernetworking/
+# https://github.com/containernetworking/plugins/releases
+# https://github.com/containerd/containerd/blob/main/docs/getting-started.md#step-3-installing-cni-plugins
+
+- ansible.builtin.set_fact:
+    GH_PATH: "{{ ansible_env.HOME }}/.local/bin/gh"
+
+- name: "Stat {{ GH_PATH }}"
+  ansible.builtin.stat:
+    path: "{{ GH_PATH }}"
+  register: stat_gh_path_raw
+
+# BWARE: `ansible-playbook ... --become -K` won't work because
+#   {{ ansible_env.HOME }} is /root
+- name: "Fail unless {{ GH_PATH }}"
+  ansible.builtin.fail:
+    msg: "ALERT: {{ GH_PATH }} not found"
+  when: not stat_gh_path_raw.stat.exists
+
+- name: "Determine latest CNI release"
+  ansible.builtin.command: "{{ GH_PATH }} release view --repo containernetworking/plugins --json tagName --jq .tagName"
+  register: cni_latest_version
+
+- ansible.builtin.set_fact:
+    CNI_PLUGINS_REPO: "https://github.com/containernetworking/plugins"
+
+- ansible.builtin.set_fact:
+    CNI_PLUGINS_TAR: "cni-plugins-linux-amd64-{{ cni_latest_version.stdout }}.tgz"
+
+- ansible.builtin.set_fact:
+    CNI_PLUGINS_URL: "{{ CNI_PLUGINS_REPO }}/releases/download/{{ cni_latest_version.stdout }}/{{ CNI_PLUGINS_TAR }}"
+
+- name: "Download latest CNI release — {{ cni_latest_version.stdout }}"
+  ansible.builtin.get_url:
+    # E.g.,
+    #   https://github.com/containernetworking/plugins/releases/download/v1.6.0/cni-plugins-linux-amd64-v1.6.0.tgz
+    url: "{{ CNI_PLUGINS_URL }}"
+    dest: "{{ zoidy_homefries_downloads_dir }}/"
+    # E.g., https://github.com/containernetworking/plugins/releases/download/v1.6.0/cni-plugins-linux-arm-v1.6.0.tgz.sha512
+    checksum: "sha512:{{ CNI_PLUGINS_URL }}.sha512"
+
+# E.g., mkdir -p /opt/cni/bin
+- name: Ensure destination directory exists
+  ansible.builtin.file:
+    path: "/opt/cni/bin"
+    state: directory
+  become: yes
+
+# E.g., tar Cxzvf /opt/cni/bin cni-plugins-linux-amd64-v1.1.1.tgz
+- name: Unpack CNI plugins to /opt/cni/bin
+  ansible.builtin.unarchive:
+    src: "{{ zoidy_homefries_downloads_dir }}/{{ CNI_PLUGINS_TAR }}"
+    dest: "/opt/cni/bin"
+    remote_src: yes
+  become: yes
+

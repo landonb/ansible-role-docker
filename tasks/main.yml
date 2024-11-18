@@ -101,3 +101,9 @@
 
 - include_tasks: docker-users.yml
   when: at_least_one_user_to_modify is defined
+
+# *** Kubernetes extras
+
+- include_tasks: kubernetes-install-cni-plugins.yml
+  when: extras_install_cni_plugins | bool
+
