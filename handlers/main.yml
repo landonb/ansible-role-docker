@@ -7,3 +7,15 @@
   ignore_errors: "{{ ansible_check_mode }}"
   when: docker_service_manage | bool
   become: true
+
+# E.g., sudo systemctl restart containerd
+- name: restart containerd
+  ansible.builtin.service:
+    name: containerd
+    state: "{{ containerd_restart_handler_state }}"
+  # Ignore errors in check mode (--check), aka dry run.
+  # REFER: https://docs.ansible.com/ansible/2.8/user_guide/playbooks_checkmode.html
+  ignore_errors: "{{ ansible_check_mode }}"
+  when: containerd_service_manage | bool
+  become: true
+

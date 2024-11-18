@@ -1,0 +1,77 @@
+---
+
+# Reset the containerd configuration and enable the systemd cgroup driver.
+#
+# The default /etc/containerd/config.toml from Docker's containerd.io deb
+# package is sparse — it disables the CRI integration plugin by default
+# and does nothing else.
+#
+# These tasks enable CRI support, which is required to use containerd with
+# Kubernetes
+#
+# But rather than enable CRI, e.g., by changing the line that containerd.io
+# setup:
+#
+#   disabled_plugins = ["cri"]
+#
+# We'll reset the entire containerd config as recommended by the K8s docs:
+#
+#   containerd config default > /etc/containerd/config.toml
+#
+# - REFER:
+#   https://kubernetes.io/docs/setup/production-environment/container-runtimes/#containerd-systemd
+#   https://github.com/containerd/containerd/blob/main/docs/getting-started.md#advanced-topics
+#
+# Note the default config is lots more verbose than what containerd.io sets.
+# - The author is a production k8s newbie — I've only used k8s via Docker
+#   Desktop, and I've never set it up from scratch until now — so I don't
+#   know what all the config options do. But I assume they're mostly all
+#   default values that would be the same if omitted. They're also nice
+#   for discoverability — for learning by doing, rather than by reading
+#   docs, or not learning at all if you stick to DD, minikube, kind, etc.
+# - The default config also includes the [plugins...runc.options] section
+#   we'll edit to enable cgroup v2.
+
+# SAVVY: ansible.builtin.command does not support shell operations, like `>`.
+- name: Reset containerd config
+  ansible.builtin.shell: containerd config default > /etc/containerd/config.toml
+  notify: restart containerd
+  become: yes
+
+# Configure the systemd cgroup driver, recommended if you use cgroup v2.
+#
+# - Change "SystemdCgroup = false" to "true":
+#
+#     [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+#       ...
+#       [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+#         SystemdCgroup = true
+#
+# SAVVY: Here's how to check if the host supports cgroup v2:
+#
+#   $ stat -fc %T /sys/fs/cgroup/
+#   cgroup2fs
+#
+# - If the host only supports cgroup v1, you'll see "tmpfs" instead.
+#
+# - REFER: https://kubernetes.io/docs/concepts/architecture/cgroups/#check-cgroup-version
+
+- name: Check cgroup v2 support
+  ansible.builtin.command: stat -fc %T /sys/fs/cgroup/
+  register: stat_sys_fs_cgroup_raw
+
+- name: Fail unless cgroup v2 supported
+  ansible.builtin.fail:
+    msg: "ALERT: cgroup v2 not supported"
+  when: stat_sys_fs_cgroup_raw.stdout != "cgroup2fs"
+
+- name: Enable systemd cgroup driver runc usage
+  ansible.builtin.lineinfile:
+    dest: /etc/containerd/config.toml
+    backrefs: true
+    regexp: '^(\s*)SystemdCgroup\s*='
+    line: '\1SystemdCgroup = true'
+    state: present
+  notify: restart containerd
+  become: yes
+

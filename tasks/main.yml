@@ -107,3 +107,6 @@
 - include_tasks: kubernetes-install-cni-plugins.yml
   when: extras_install_cni_plugins | bool
 
+- include_tasks: kubernetes-reconfigure-containerd.yml
+  when: extras_reconfigure_containerd | bool
+
