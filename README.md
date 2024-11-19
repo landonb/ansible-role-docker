@@ -1,4 +1,4 @@
-# *Forked* `ansible-role-docker` adds Linux Mint and `ansible-playbook ... -K` support
+# *Forked* `ansible-role-docker` adds Linux Mint support, and Kubernetes tooling
 
 This [`ansible-role-docker`](https://github.com/geerlingguy/ansible-role-docker)
 fork makes the following changes:
