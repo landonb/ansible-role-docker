@@ -1,0 +1,148 @@
+---
+
+# The tasks below match the steps outlined in the kubeadm install doc.
+# - We'll include all tasks, even though the first 2 tasks are probably
+#   no-ops.
+#
+# REFER:
+# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+
+# *** System prep.
+
+# Note that 'setup-Debian.yml' installs 'apt-transport-https' and
+# 'ca-certificates', and that 'curl' and 'gpg' are likely already
+# installed (if you've setup your host as you would a typical
+# development machine).
+# - E.g., sudo apt-get install -y apt-transport-https ca-certificates curl gpg
+- name: Ensure dependencies are installed.
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gpg
+    state: present
+  become: true
+
+# Note that 'setup-Debian.yml' also ensures this directory exists.
+# - E.g., sudo mkdir -p /etc/apt/keyrings && sudo chmod 0755 /etc/apt/keyrings
+- name: Ensure directory exists for /etc/apt/keyrings
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+  become: true
+
+# *** Apt prep.
+
+# Next, the kubeadm install doc describes installing the Kubernetes apt key,
+# and then adding the Kubernetes apt repository.
+#
+# Note the instructions are outdated, or at least don't work on LM 21.3
+# (effectively Ubuntu 22.04 Jammy).
+#
+# - The traditional Ansible approach doesn't work, e.g.:
+#
+#     # E.g., curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key \
+#     #   | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+#     - name: Add Kubernetes apt key.
+#       ansible.builtin.get_url:
+#         url: "{{ kubernetes_apt_gpg_key }}"
+#         dest: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+#         mode: '0644'
+#         force: false
+#         # checksum: # <Not specified>
+#       become: true
+#
+#     # E.g., echo \
+#     #   'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /' \
+#     #   | sudo tee /etc/apt/sources.list.d/kubernetes.list
+#     - name: Add Kubernetes repository.
+#       ansible.builtin.apt_repository:
+#         repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version }}/deb/ /"
+#         state: present
+#         filename: "kubernetes"
+#         update_cache: true
+#       become: true
+#
+# - Specifically, the second task fails:
+#
+#     fatal: [localhost]: FAILED! => {"changed": false, "msg":
+#       "Failed to update apt cache: W:GPG error:
+#        https://prod-cdn.packages.k8s.io/repositories/isv:/kubernetes:/core:/stable:/v1.31/deb  InRelease:
+#        The following signatures couldn't be verified because the public key is not available:
+#          NO_PUBKEY 234654DA9A296436,
+#        E:The repository 'https://pkgs.k8s.io/core:/stable:/v1.31/deb  InRelease' is not signed."}
+#
+# - And while the author sorta found the mentioned key here:
+#     https://build.opensuse.org/projects/isv:kubernetes/signing_keys
+#   I couldn't figure out how to install it, e.g., neither of these worked:
+#
+#     gpg --recv-key 234654DA9A296436
+#     gpg --keyserver <dunno> --recv-key 234654DA9A296436
+#
+# Fortunately, I found the answer via a gist!:
+#
+# - *Example usages of the new `deb822_repository` Ansible module*
+#   https://gist.github.com/roib20/27fde10af195cee1c1f8ac5f68be7e9b?permalink_comment_id=4980485#gistcomment-4980485
+#
+# White uses the newish ansible.builtin.deb822_repository module (added in
+# ansible-core 2.15, released 2023-05-15).
+#
+# (**THANK YOU roib20!!**)
+#
+# REFER:
+# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/deb822_repository_module.html
+# https://repolib.readthedocs.io/en/latest/deb822-format.html
+
+# Creates:
+#   /etc/apt/sources.list.d/kubernetes.sources
+#   /etc/apt/keyrings/kubernetes.asc
+# - Where:
+#   $ cat /etc/apt/sources.list.d/kubernetes.sources
+#   X-Repolib-Name: kubernetes
+#   Types: deb
+#   URIs: https://pkgs.k8s.io/core:/stable:/v1.31/deb/
+#   Signed-By: /etc/apt/keyrings/kubernetes.asc
+#   Suites: /
+#   Enabled: yes
+- name: Add Kubernetes apt repository
+  ansible.builtin.deb822_repository:
+    name: kubernetes
+    types: [deb]
+    uris: "https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version }}/deb/"
+    signed_by: "https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version }}/deb/Release.key"
+    suites: [/]
+    state: present
+    enabled: yes
+  become: true
+
+# *** Apt install
+
+# E.g., sudo apt-get update
+- name: Run command "apt-get update"
+  ansible.builtin.apt: update_cache=yes
+  become: true
+
+# E.g., sudo apt-get install -y kubelet kubeadm kubectl
+- name: Install kubelet, kubeadm and kubectl
+  ansible.builtin.apt: name="{{ item }}" state="present"
+  loop:
+    - kubelet
+    - kubeadm
+    - kubectl
+  become: true
+
+# Pin kube* versions, which must match (or be within one minor release).
+# - SAVVY: To *unhold*, use `selection: install`.
+# - REFER:
+#   https://docs.ansible.com/ansible/latest/collections/ansible/builtin/dpkg_selections_module.html
+# E.g., sudo apt-mark hold kubelet kubeadm kubectl
+- name: Pin version for kubelet, kubeadm and kubectl
+  ansible.builtin.dpkg_selections: name="{{ item }}" selection="hold"
+  loop:
+    - kubelet
+    - kubeadm
+    - kubectl
+  become: true
+

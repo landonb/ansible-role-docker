@@ -110,6 +110,9 @@
 - include_tasks: kubernetes-reconfigure-containerd.yml
   when: extras_reconfigure_containerd | bool
 
+- include_tasks: kubernetes-install-kubeadm.yml
+  when: extras_install_kubeadm | bool
+
 - include_tasks: kubernetes-adjust-firewall.yml
   when: extras_firewall_allow_ports_tcp | length > 0
 

@@ -48,6 +48,11 @@ extras_reconfigure_containerd: true
 #   - Whether to restart containerd.
 containerd_service_manage: true
 containerd_restart_handler_state: restarted
+# - Install kubeadm.
+extras_install_kubeadm: true
+#   - The same version is used to install and hold (pin)
+#     the three packages, kubelet, kubeadm and kubectl.
+kubernetes_version: v1.31
 # - Add iptables/ip6tables and ufw firewall rules.
 #   - To skip this task, set to empty array:
 #     extras_firewall_allow_ports_tcp: []

@@ -31,6 +31,10 @@ fork makes the following changes:
     or [kind](https://kind.sigs.k8s.io/), but the (fork) author is
     curious to get to know Kubernetes on a deeper lever.
 
+- [Installs `kubelet`, `kubeadm` and `kubectl`](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)
+  from Kubernetes apt repo using
+  [DEB822 Source Format](https://repolib.readthedocs.io/en/latest/deb822-format.html).
+
 - Configures `iptables`, `ip6tables`, and `ufw` to allow incoming TCP
   connections on the
   [Kubernetes ports](https://kubernetes.io/docs/reference/networking/ports-and-protocols/).
