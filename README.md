@@ -33,7 +33,7 @@ fork makes the following changes:
 
 - [Installs `kubelet`, `kubeadm` and `kubectl`](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)
   from Kubernetes apt repo using
-  [DEB822 Source Format](https://repolib.readthedocs.io/en/latest/deb822-format.html).
+  [Deb822-style Format sources](https://repolib.readthedocs.io/en/latest/deb822-format.html).
 
 - Configures `iptables`, `ip6tables`, and `ufw` to allow incoming TCP
   connections on the
