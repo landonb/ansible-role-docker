@@ -28,4 +28,5 @@
     replace: '#\1\2\3swap\4'
     backup: true
   become: true
+  notify: daemon-reload
 

@@ -25,3 +25,9 @@
   ansible.builtin.command: service netfilter-persistent save
   become: true
 
+# E.g., sudo systemctl daemon-reload
+- name: daemon-reload
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  become: true
+
