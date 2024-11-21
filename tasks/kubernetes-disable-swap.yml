@@ -19,6 +19,8 @@
 #   /swapfile                                 none            swap    sw              0       0
 # - ALTLY: We could use 'ansible.posix.mount' to remove the relevant swapfile
 #   mount, but author would rather keep it, commented, for remindability.
+# - ALTLY: Something simple like this command would also work:
+#     sed -i /etc/fstab -e '/\bswap\b/ s/^\(.*\)/#\1/'
 - name: Disable swap permanently in /etc/fstab (persists reboots)
   ansible.builtin.replace:
     path: /etc/fstab
