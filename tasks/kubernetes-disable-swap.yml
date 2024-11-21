@@ -1,0 +1,29 @@
+---
+
+# SAVVY/2024-11-21: Kubernetes has added beta support for swap:
+#   https://kubernetes.io/blog/2023/08/24/swap-linux-beta/
+# CALSO:
+#   https://github.com/ehashman/k-enhancements/blob/kep-2400/keps/sig-node/2400-node-swap/README.md#summary
+#   https://github.com/kubernetes/enhancements/tree/master/keps/sig-node/2400-node-swap
+#   https://github.com/kubernetes/kubernetes/issues/53533
+#   https://github.com/kubernetes/kubernetes/issues/7294
+#   https://discuss.kubernetes.io/t/swap-off-why-is-it-necessary/6879
+
+- name: Disable swap for current session
+  command: swapoff -a
+  become: true
+
+# THANX: Author was gonna use 'lineinfile' but found a useful 'replace' example:
+#   https://www.reddit.com/r/linuxadmin/comments/flzx5r/comment/fl1uaoz/
+# REFER/2024-11-21: Author's swapfile mount on LM 21.3:
+#   /swapfile                                 none            swap    sw              0       0
+# - ALTLY: We could use 'ansible.posix.mount' to remove the relevant swapfile
+#   mount, but author would rather keep it, commented, for remindability.
+- name: Disable swap permanently in /etc/fstab (persists reboots)
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp: '^(\s*)([^#\n]+\s+)(\w+\s+)swap(\s+.*)$'
+    replace: '#\1\2\3swap\4'
+    backup: true
+  become: true
+

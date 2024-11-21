@@ -75,6 +75,8 @@ extras_firewall_allow_ports_tcp:
   - 10256
   # # Worker node(s) / NodePort Services
   # - 30000-32767  # Varies based on what's installed
+# Disable swap so that resource management is done correctly.
+extras_disable_swap_permanently: true
 
 # Map Linux Mint distribution_release to Ubuntu
 # THANX: I searched "ansible_distribution_release" and found this project

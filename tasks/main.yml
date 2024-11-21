@@ -116,3 +116,6 @@
 - include_tasks: kubernetes-adjust-firewall.yml
   when: extras_firewall_allow_ports_tcp | length > 0
 
+- include_tasks: kubernetes-disable-swap.yml
+  when: extras_disable_swap_permanently | bool
+

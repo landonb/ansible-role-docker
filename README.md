@@ -39,6 +39,9 @@ fork makes the following changes:
   connections on the
   [Kubernetes ports](https://kubernetes.io/docs/reference/networking/ports-and-protocols/).
 
+- Disable swap permanently in `/etc/fstab` (though
+  [Linux swap support is in beta](https://kubernetes.io/blog/2023/08/24/swap-linux-beta/)).
+
 - Adds `-K`/`--ask-become-pass` support.
 
   - Specifically, so you can call something like this:
