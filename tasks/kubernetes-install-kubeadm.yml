@@ -128,8 +128,13 @@
 - name: Install kubelet, kubeadm and kubectl
   ansible.builtin.apt: name="{{ item }}" state="present"
   loop:
+    # Depends: kubernetes-cni, iptables, iproute2, mount, conntrack, util-linux, ethtool, libc6
+    # - kubernetes-cni installs: /etc/cni/net.d/, /opt/cni/bin*, 
     - kubelet
+    # Depends: cri-tools
+    # - cri-tools installs cmd: `crictl`
     - kubeadm
+    # No deps; installs `kubectl` and /usr/share/doc/kubectl/README.md
     - kubectl
   become: true
 

@@ -2,10 +2,17 @@
 # Edition can be one of: 'ce' (Community Edition) or 'ee' (Enterprise Edition).
 docker_edition: 'ce'
 docker_packages:
+  # Installs cmds: `dockerd`, `docker-proxy`,
+  #                `/usr/libexec/docker/docker-init`
   - "docker-{{ docker_edition }}"
+  # Installs cmds: `docker`
   - "docker-{{ docker_edition }}-cli"
+  # Install cmds: `dockerd-rootless.sh`, `dockerd-rootless-setuptool.sh`,
+  #               `rootlesskit`, `rootlesskit-docker-proxy`
   - "docker-{{ docker_edition }}-rootless-extras"
+  # Installs cmds: `containerd`, `ctr`, `runc`, `containerd-shim[-*]`
   - "containerd.io"
+  # Installs cmds: `/usr/libexec/docker/cli-plugins/docker-buildx`
   - docker-buildx-plugin
 docker_packages_state: present
 docker_obsolete_packages:
